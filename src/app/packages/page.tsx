@@ -1,0 +1,319 @@
+"use client";
+
+import { useEffect, useState, Suspense, FormEvent } from "react";
+import { TopChannelsSkeleton } from "@/components/Tables/top-channels/skeleton";
+import { Form } from "../forms/form";
+import * as logos from "@/assets/logos";
+import { createClient } from '@supabase/supabase-js';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import Image from "next/image";
+import InputGroup from "@/components/FormElements/InputGroup";
+import { TextAreaGroup } from "@/components/FormElements/InputGroup/text-area";
+import { ShowcaseSection } from "@/components/Layouts/showcase-section";
+import { Trash2, Pencil } from 'lucide-react';
+
+export default function TablesPage() {
+  const [addOpen, setAdd] = useState(false);
+  const [editOpen, setEdit] = useState(false);
+  const [data, setData] = useState<any[]>([]);
+  const [selectData, setSelectData] = useState<any>({});
+  const [loading, setLoading] = useState(true);
+  const [limit, setLimit] = useState(false);
+  const [supabase, setSupabase] = useState<any>(null);
+
+  const fetchPost = async () => {
+    const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_KEY!;
+    console.log("Supabase ENV:", SUPABASE_URL, SUPABASE_KEY);
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    setSupabase(supabase);
+    console.log("Supabase client:", supabase);
+
+    const { data, error } = await supabase
+      .from("packages")
+      .select("*");
+
+    if (error) {
+      console.error("Error fetching post:", error);
+    } else {
+      console.log("data", data);
+      setData(data);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!limit) {
+      setLimit(true);
+    }
+    setLoading(true);
+
+
+    fetchPost();
+  }, []);
+
+  async function handleFileUpload(e: any) {
+    e.preventDefault(); // stop page reload
+    console.log("e.target", e.target);
+
+    const fileInput = e.target.querySelector('input[type="file"]');
+    const file = fileInput?.files?.[0];
+
+    if (!file) {
+      console.error("No file selected");
+      return;
+    }
+    console.log("fileInput", fileInput);
+
+    const formData = new FormData(e.target);
+
+    const text = formData.get("Text");
+    const subtext = formData.get("Subtext");
+    const price = formData.get("Price");
+    const slug = formData.get("Slug");
+
+    if (!file) {
+      alert("Please select a file!");
+      return;
+    }
+
+    try {
+      // Upload file to Supabase Storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from("yacht-bucket")
+        .upload(`files/${file.name}`, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: publicUrlData } = supabase.storage
+        .from("yacht-bucket")
+        .getPublicUrl(`files/${file.name}`);
+
+      const fileUrl = publicUrlData.publicUrl;
+      console.log("fileUrl", fileUrl);
+
+      // 4️⃣ Insert metadata into your table
+      const { error: insertError } = await supabase
+        .from("packages")
+        .insert([{ text, subtext, price, slug, img: fileUrl }]);
+
+      if (insertError) throw insertError;
+      fetchPost();
+      setAdd(false);
+      alert("✅ File uploaded and data inserted!");
+    } catch (err: any) {
+      console.error(" Upload failed:", err.message);
+      alert("Upload failed: " + err.message);
+    }
+  }
+
+  async function editBlog(e: any) {
+
+    const formData = new FormData(e.target);
+    const fileInput = e.target.querySelector('input[type="file"]');
+    let fileUrl = selectData.img;
+    if (fileInput && fileInput.files && fileInput.files.length > 0){
+      const file = fileInput?.files?.[0];
+      if (!file) {
+        console.error("No file selected");
+        // return;
+      } else {
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("yacht-bucket")
+          .upload(`files/${file.name}`, file, { upsert: true });
+
+        if (uploadError) throw uploadError;
+
+        // Get public URL
+        const { data: publicUrlData } = supabase.storage
+          .from("yacht-bucket")
+          .getPublicUrl(`files/${file.name}`);
+
+        fileUrl = publicUrlData.publicUrl;
+        console.log("fileUrl", fileUrl);
+      }
+    }
+
+
+    const text = formData.get("Text");
+    const subtext = formData.get("Subtext");
+    const price = formData.get("Price");
+    // const slug = formData.get("Slug");
+    const { data, error } = await supabase
+      .from("packages")
+      .update({ text, subtext, price, img: fileUrl })
+      .eq("id", Number(selectData.id));
+    console.log("data", data);
+
+
+    if (error) {
+      console.error(error);
+    } else {
+      console.log("Updated row:", data);
+    }
+
+    fetchPost();
+  }
+
+
+  async function deleteBlog(id: any) {
+    const { data, error } = await supabase
+      .from("packages")
+      .delete()
+      .eq("id", Number(id));
+
+    if (error) console.error(error);
+    else console.log("Deleted row:", data);
+    fetchPost();
+  }
+
+
+  return (
+    <>
+      <button
+        className="my-6 px-8 py-2 flex w-fit justify-center rounded-lg bg-primary p-[13px] font-medium text-white hover:bg-opacity-90"
+        onClick={() => {
+          // if (data.length ) {
+          // }
+          setAdd(!addOpen)
+        }}
+      >
+        {addOpen ? "Cancel" : "Add Packages"}
+      </button>
+
+      {addOpen && (
+        <div className="flex flex-col gap-9 mb-6">
+          <ShowcaseSection title="Packages" className="!p-6.5">
+            <form action="#" onSubmit={(event) => { editOpen ? editBlog(event) : handleFileUpload(event) }}>
+
+              <InputGroup
+                label="Text"
+                type="text"
+                value={selectData.text}
+                placeholder="Enter Title"
+                className="mb-4.5"
+                required
+              />
+
+              <InputGroup
+                label="Subtext"
+                type="text"
+                value={selectData.subtext}
+                placeholder="Enter Description"
+                className="mb-4.5"
+                required
+              />
+
+              <InputGroup
+                label="Price"
+                type="text"
+                value={selectData.price}
+                placeholder="Enter Date"
+                className="mb-4.5"
+                required
+              />
+
+              {/* <InputGroup
+                label="Slug"
+                type="text"
+                placeholder="Enter Slug"
+                value={selectData.slug}
+                className="mb-4.5"
+                required
+              /> */}
+              {selectData?.img &&
+                <div>
+                  <Image src={selectData.img} alt="Package Image" width={100} height={200} />
+                </div>
+              }
+              <InputGroup
+                label="Image"
+                type="file"
+                placeholder="Enter Image"
+                className="mb-4.5"
+                required={!editOpen}
+              />
+
+              <button className="mt-6 flex w-full justify-center rounded-lg bg-primary p-[13px] font-medium text-white hover:bg-opacity-90"
+                type="submit"
+              >
+                {editOpen ? "Update" : "Submit"}
+              </button>
+            </form>
+          </ShowcaseSection>
+        </div>
+      )}
+
+      <div className="space-y-10">
+        {loading ? (
+          <TopChannelsSkeleton />
+        ) : (
+          <Suspense fallback={<TopChannelsSkeleton />}>
+            <div
+              className="grid rounded-[10px] bg-white px-7.5 pb-4 pt-7.5 shadow-1 dark:bg-gray-dark dark:shadow-card"
+            >
+              <h2 className="mb-4 text-body-2xlg font-bold text-dark dark:text-white">
+                Top Channels
+              </h2>
+
+              <Table className="overflow-x-auto ">
+                <TableHeader>
+                  <TableRow className="border-none uppercase [&>th]:text-center">
+                    <TableHead className="!text-left">Action</TableHead>
+                    <TableHead className="!text-left">Title</TableHead>
+                    <TableHead className="!text-left">Description</TableHead>
+                    <TableHead className="!text-left">Date</TableHead>
+                    <TableHead className="!text-left">Image</TableHead>
+                    {/* <TableHead className="!text-left">Slug</TableHead> */}
+                  </TableRow>
+                </TableHeader>
+
+                <TableBody>
+                  {data?.map((channel, i) => (
+                    <TableRow
+                      className="text-center text-base font-medium text-dark dark:text-white"
+                      key={channel.text + i}
+                    >
+                      <TableCell className="w-fit truncate flex gap-4">
+                        <button onClick={() => deleteBlog(channel.id)}><Trash2 /></button>
+                        <button onClick={() => {
+                          setEdit(true);
+                          setAdd(true);
+                          setSelectData(channel);
+                        }}><Pencil />
+                        </button>
+                      </TableCell>
+
+                      <TableCell className="max-w-[50px] truncate">
+                        {channel.text}
+                      </TableCell>
+
+                      <TableCell className="max-w-[50px] truncate">{channel.subtext}</TableCell>
+
+                      <TableCell >
+                        {channel.price}
+                      </TableCell>
+
+                      <TableCell className="max-w-[50px] truncate">{channel.img}</TableCell>
+
+                      {/* <TableCell className="max-w-[50px] truncate">{channel.slug}</TableCell> */}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </Suspense>
+        )}
+      </div>
+    </>
+  );
+}
