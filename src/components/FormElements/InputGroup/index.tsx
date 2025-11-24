@@ -55,7 +55,7 @@ const InputGroup: React.FC<InputGroupProps> = ({
         <input
           id={id}
           type={type}
-          name={label}
+          name={props.name ||label}
           placeholder={placeholder}
           onChange={(e) => {
             setFormData(e.target.value);

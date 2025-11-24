@@ -81,6 +81,7 @@ export default function TablesPage() {
     const beds = formData.get("Beds");
     const crew = formData.get("Crew");
     const price = formData.get("Price");
+    const alt = formData.get("alt_tab");
 
     if (!file) {
       alert("Please select a file!");
@@ -106,7 +107,7 @@ export default function TablesPage() {
       // 4️⃣ Insert metadata into your table
       const { error: insertError } = await supabase
         .from("fleet")
-        .insert([{ name,capacity,baths,beds,crew,price,image: fileUrl }]);
+        .insert([{ name,capacity,baths,beds,crew,price,image: fileUrl,alt_tab: alt  }]);
 
       if (insertError) throw insertError;
       fetchPost();
@@ -152,9 +153,11 @@ export default function TablesPage() {
     const beds = formData.get("Beds");
     const crew = formData.get("Crew");
     const price = formData.get("Price");
+    const alt = formData.get("alt_tab");
+
     const { data, error } = await supabase
       .from("fleet")
-      .update({ name,capacity,baths,beds,crew,price,image: fileUrl })
+      .update({ name,capacity,baths,beds,crew,price,image: fileUrl, alt_tab : alt })
       .eq("id", Number(selectData.id));
     console.log("data", data);
 
@@ -248,6 +251,15 @@ export default function TablesPage() {
                 className="mb-4.5"
                 required
               />
+              <InputGroup
+                label="Image Alt Text"
+                name="alt_tab"
+                 type="text"
+                  placeholder="Enter Alt"
+                value={selectData.alt_tab}
+                className="mb-4.5"
+                required
+              />
               {selectData?.image &&
                 <div>
                   <Image src={selectData.image} alt="Package Image" width={100} height={200} />
@@ -293,6 +305,7 @@ export default function TablesPage() {
                     <TableHead className="!text-left">Beds</TableHead>
                     <TableHead className="!text-left">Crew</TableHead>
                     <TableHead className="!text-left">Price</TableHead>
+                    <TableHead className="!text-left">Alt</TableHead>
                     <TableHead className="!text-left">Image</TableHead>
                     {/* <TableHead className="!text-left">Slug</TableHead> */}
                   </TableRow>
@@ -319,6 +332,7 @@ export default function TablesPage() {
                       <TableCell className="max-w-[50px] truncate">{channel.beds}</TableCell>
                       <TableCell className="max-w-[50px] truncate">{channel.crew}</TableCell>
                       <TableCell className="max-w-[50px] truncate">{channel.price}</TableCell>
+                       <TableCell className="max-w-[50px] truncate">{channel.alt_tab}</TableCell>
                       <TableCell className="max-w-[50px] truncate">{channel.image}</TableCell>
 
                       {/* <TableCell className="max-w-[50px] truncate">{channel.slug}</TableCell> */}
