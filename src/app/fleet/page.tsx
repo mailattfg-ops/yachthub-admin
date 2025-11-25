@@ -4,7 +4,7 @@ import { useEffect, useState, Suspense, FormEvent } from "react";
 import { TopChannelsSkeleton } from "@/components/Tables/top-channels/skeleton";
 import { Form } from "../forms/form";
 import * as logos from "@/assets/logos";
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "@supabase/supabase-js";
 import {
   Table,
   TableBody,
@@ -17,7 +17,7 @@ import Image from "next/image";
 import InputGroup from "@/components/FormElements/InputGroup";
 import { TextAreaGroup } from "@/components/FormElements/InputGroup/text-area";
 import { ShowcaseSection } from "@/components/Layouts/showcase-section";
-import { Trash2, Pencil } from 'lucide-react';
+import { Trash2, Pencil } from "lucide-react";
 
 export default function TablesPage() {
   const [addOpen, setAdd] = useState(false);
@@ -37,9 +37,7 @@ export default function TablesPage() {
     setSupabase(supabase);
     console.log("Supabase client:", supabase);
 
-    const { data, error } = await supabase
-      .from("fleet")
-      .select("*");
+    const { data, error } = await supabase.from("fleet").select("*");
 
     if (error) {
       console.error("Error fetching post:", error);
@@ -55,7 +53,6 @@ export default function TablesPage() {
       setLimit(true);
     }
     setLoading(true);
-
 
     fetchPost();
   }, []);
@@ -107,7 +104,18 @@ export default function TablesPage() {
       // 4️⃣ Insert metadata into your table
       const { error: insertError } = await supabase
         .from("fleet")
-        .insert([{ name,capacity,baths,beds,crew,price,image: fileUrl,alt_tab: alt  }]);
+        .insert([
+          {
+            name,
+            capacity,
+            baths,
+            beds,
+            crew,
+            price,
+            image: fileUrl,
+            alt_tab: alt,
+          },
+        ]);
 
       if (insertError) throw insertError;
       fetchPost();
@@ -120,11 +128,10 @@ export default function TablesPage() {
   }
 
   async function editBlog(e: any) {
-
     const formData = new FormData(e.target);
     const fileInput = e.target.querySelector('input[type="file"]');
     let fileUrl = selectData.image;
-    if (fileInput && fileInput.files && fileInput.files.length > 0){
+    if (fileInput && fileInput.files && fileInput.files.length > 0) {
       const file = fileInput?.files?.[0];
       if (!file) {
         console.error("No file selected");
@@ -146,7 +153,6 @@ export default function TablesPage() {
       }
     }
 
-
     const name = formData.get("Name");
     const capacity = formData.get("Capacity");
     const baths = formData.get("Baths");
@@ -157,10 +163,18 @@ export default function TablesPage() {
 
     const { data, error } = await supabase
       .from("fleet")
-      .update({ name,capacity,baths,beds,crew,price,image: fileUrl, alt_tab : alt })
+      .update({
+        name,
+        capacity,
+        baths,
+        beds,
+        crew,
+        price,
+        image: fileUrl,
+        alt_tab: alt,
+      })
       .eq("id", Number(selectData.id));
     console.log("data", data);
-
 
     if (error) {
       console.error(error);
@@ -170,7 +184,6 @@ export default function TablesPage() {
 
     fetchPost();
   }
-
 
   async function deleteBlog(id: any) {
     const { data, error } = await supabase
@@ -183,25 +196,28 @@ export default function TablesPage() {
     fetchPost();
   }
 
-
   return (
     <>
       <button
-        className="my-6 px-8 py-2 flex w-fit justify-center rounded-lg bg-primary p-[13px] font-medium text-white hover:bg-opacity-90"
+        className="my-6 flex w-fit justify-center rounded-lg bg-primary p-[13px] px-8 py-2 font-medium text-white hover:bg-opacity-90"
         onClick={() => {
           // if (data.length ) {
           // }
-          setAdd(!addOpen)
+          setAdd(!addOpen);
         }}
       >
         {addOpen ? "Cancel" : "Add Fleet"}
       </button>
 
       {addOpen && (
-        <div className="flex flex-col gap-9 mb-6">
+        <div className="mb-6 flex flex-col gap-9">
           <ShowcaseSection title="fleet" className="!p-6.5">
-            <form action="#" onSubmit={(event) => { editOpen ? editBlog(event) : handleFileUpload(event) }}>
-
+            <form
+              action="#"
+              onSubmit={(event) => {
+                editOpen ? editBlog(event) : handleFileUpload(event);
+              }}
+            >
               <InputGroup
                 label="Name"
                 type="text"
@@ -209,6 +225,9 @@ export default function TablesPage() {
                 placeholder="Enter Name"
                 className="mb-4.5"
                 required
+                handleChange={(e) =>
+                  setSelectData({ ...selectData, name: e.target.value })
+                }
               />
 
               <InputGroup
@@ -218,7 +237,11 @@ export default function TablesPage() {
                 placeholder="Enter Capacity"
                 className="mb-4.5"
                 required
+                handleChange={(e) =>
+                  setSelectData({ ...selectData, capacity: e.target.value })
+                }
               />
+
               <InputGroup
                 label="Baths"
                 type="text"
@@ -226,7 +249,11 @@ export default function TablesPage() {
                 placeholder="Enter Baths"
                 className="mb-4.5"
                 required
+                handleChange={(e) =>
+                  setSelectData({ ...selectData, baths: e.target.value })
+                }
               />
+
               <InputGroup
                 label="Beds"
                 type="text"
@@ -234,7 +261,11 @@ export default function TablesPage() {
                 placeholder="Enter Beds"
                 className="mb-4.5"
                 required
+                handleChange={(e) =>
+                  setSelectData({ ...selectData, beds: e.target.value })
+                }
               />
+
               <InputGroup
                 label="Crew"
                 type="text"
@@ -242,29 +273,46 @@ export default function TablesPage() {
                 placeholder="Enter Crew"
                 className="mb-4.5"
                 required
+                handleChange={(e) =>
+                  setSelectData({ ...selectData, crew: e.target.value })
+                }
               />
+
               <InputGroup
                 label="Price"
                 type="text"
                 value={selectData.price}
-                placeholder="Enter Date"
+                placeholder="Enter Price"
                 className="mb-4.5"
                 required
+                handleChange={(e) =>
+                  setSelectData({ ...selectData, price: e.target.value })
+                }
               />
+
               <InputGroup
                 label="Image Alt Text"
                 name="alt_tab"
-                 type="text"
-                  placeholder="Enter Alt"
+                type="text"
+                placeholder="Enter Alt"
                 value={selectData.alt_tab}
                 className="mb-4.5"
                 required
+                handleChange={(e) =>
+                  setSelectData({ ...selectData, alt_tab: e.target.value })
+                }
               />
-              {selectData?.image &&
+
+              {selectData?.image && (
                 <div>
-                  <Image src={selectData.image} alt="Package Image" width={100} height={200} />
+                  <Image
+                    src={selectData.image}
+                    alt="Package Image"
+                    width={100}
+                    height={200}
+                  />
                 </div>
-              }
+              )}
               <InputGroup
                 label="Image"
                 type="file"
@@ -273,7 +321,8 @@ export default function TablesPage() {
                 required={!editOpen}
               />
 
-              <button className="mt-6 flex w-full justify-center rounded-lg bg-primary p-[13px] font-medium text-white hover:bg-opacity-90"
+              <button
+                className="mt-6 flex w-full justify-center rounded-lg bg-primary p-[13px] font-medium text-white hover:bg-opacity-90"
                 type="submit"
               >
                 {editOpen ? "Update" : "Submit"}
@@ -288,14 +337,12 @@ export default function TablesPage() {
           <TopChannelsSkeleton />
         ) : (
           <Suspense fallback={<TopChannelsSkeleton />}>
-            <div
-              className="grid rounded-[10px] bg-white px-7.5 pb-4 pt-7.5 shadow-1 dark:bg-gray-dark dark:shadow-card"
-            >
+            <div className="grid rounded-[10px] bg-white px-7.5 pb-4 pt-7.5 shadow-1 dark:bg-gray-dark dark:shadow-card">
               <h2 className="mb-4 text-body-2xlg font-bold text-dark dark:text-white">
                 Top Channels
               </h2>
 
-              <Table className="overflow-x-auto ">
+              <Table className="overflow-x-auto">
                 <TableHeader>
                   <TableRow className="border-none uppercase [&>th]:text-center">
                     <TableHead className="!text-left">Action</TableHead>
@@ -317,23 +364,44 @@ export default function TablesPage() {
                       className="text-center text-base font-medium text-dark dark:text-white"
                       key={channel.name + i}
                     >
-                      <TableCell className="w-fit truncate flex gap-4">
-                        <button onClick={() => deleteBlog(channel.id)}><Trash2 /></button>
-                        <button onClick={() => {
-                          setEdit(true);
-                          setAdd(true);
-                          setSelectData(channel);
-                        }}><Pencil />
+                      <TableCell className="flex w-fit gap-4 truncate">
+                        <button onClick={() => deleteBlog(channel.id)}>
+                          <Trash2 />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEdit(true);
+                            setAdd(true);
+                            setSelectData(channel);
+                          }}
+                        >
+                          <Pencil />
                         </button>
                       </TableCell>
-                      <TableCell className="max-w-[50px] truncate">{channel.name}</TableCell>
-                      <TableCell className="max-w-[50px] truncate">{channel.capacity}</TableCell>
-                      <TableCell className="max-w-[50px] truncate">{channel.baths}</TableCell>
-                      <TableCell className="max-w-[50px] truncate">{channel.beds}</TableCell>
-                      <TableCell className="max-w-[50px] truncate">{channel.crew}</TableCell>
-                      <TableCell className="max-w-[50px] truncate">{channel.price}</TableCell>
-                       <TableCell className="max-w-[50px] truncate">{channel.alt_tab}</TableCell>
-                      <TableCell className="max-w-[50px] truncate">{channel.image}</TableCell>
+                      <TableCell className="max-w-[50px] truncate">
+                        {channel.name}
+                      </TableCell>
+                      <TableCell className="max-w-[50px] truncate">
+                        {channel.capacity}
+                      </TableCell>
+                      <TableCell className="max-w-[50px] truncate">
+                        {channel.baths}
+                      </TableCell>
+                      <TableCell className="max-w-[50px] truncate">
+                        {channel.beds}
+                      </TableCell>
+                      <TableCell className="max-w-[50px] truncate">
+                        {channel.crew}
+                      </TableCell>
+                      <TableCell className="max-w-[50px] truncate">
+                        {channel.price}
+                      </TableCell>
+                      <TableCell className="max-w-[50px] truncate">
+                        {channel.alt_tab}
+                      </TableCell>
+                      <TableCell className="max-w-[50px] truncate">
+                        {channel.image}
+                      </TableCell>
 
                       {/* <TableCell className="max-w-[50px] truncate">{channel.slug}</TableCell> */}
                     </TableRow>

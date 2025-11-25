@@ -202,6 +202,9 @@ export default function TablesPage() {
                 placeholder="Enter Title"
                 className="mb-4.5"
                 required
+                handleChange={(e) =>
+                  setSelectData({ ...selectData, title: e.target.value })
+                }
               />
 
               <InputGroup
@@ -211,6 +214,9 @@ export default function TablesPage() {
                 placeholder="Enter Description"
                 className="mb-4.5"
                 required
+                handleChange={(e) =>
+                  setSelectData({ ...selectData, desc: e.target.value })
+                }
               />
 
               <InputGroup
@@ -220,6 +226,9 @@ export default function TablesPage() {
                 placeholder="Enter Date"
                 className="mb-4.5"
                 required
+                handleChange={(e) =>
+                  setSelectData({ ...selectData, date: e.target.value })
+                }
               />
 
               <InputGroup
@@ -229,6 +238,9 @@ export default function TablesPage() {
                 value={selectData.slug}
                 className="mb-4.5"
                 required
+                handleChange={(e) =>
+                  setSelectData({ ...selectData, slug: e.target.value })
+                }
               />
 
               <InputGroup
@@ -239,7 +251,11 @@ export default function TablesPage() {
                 value={selectData.alt_tab}
                 className="mb-4.5"
                 required
+                handleChange={(e) =>
+                  setSelectData({ ...selectData, alt_tab: e.target.value })
+                }
               />
+
               {selectData?.img && (
                 <div>
                   <Image
@@ -322,7 +338,7 @@ export default function TablesPage() {
                       </TableCell>
 
                       <TableCell>{channel.date}</TableCell>
-                       <TableCell className="max-w-[50px] truncate">
+                      <TableCell className="max-w-[50px] truncate">
                         {channel.alt_tab}
                       </TableCell>
 
