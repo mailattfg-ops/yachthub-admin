@@ -4,7 +4,7 @@ import { useEffect, useState, Suspense, FormEvent } from "react";
 import { TopChannelsSkeleton } from "@/components/Tables/top-channels/skeleton";
 import { Form } from "../forms/form";
 import * as logos from "@/assets/logos";
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "@supabase/supabase-js";
 import {
   Table,
   TableBody,
@@ -17,7 +17,7 @@ import Image from "next/image";
 import InputGroup from "@/components/FormElements/InputGroup";
 import { TextAreaGroup } from "@/components/FormElements/InputGroup/text-area";
 import { ShowcaseSection } from "@/components/Layouts/showcase-section";
-import { Trash2, Pencil } from 'lucide-react';
+import { Trash2, Pencil } from "lucide-react";
 
 export default function TablesPage() {
   const [addOpen, setAdd] = useState(false);
@@ -37,9 +37,7 @@ export default function TablesPage() {
     setSupabase(supabase);
     console.log("Supabase client:", supabase);
 
-    const { data, error } = await supabase
-      .from("packages")
-      .select("*");
+    const { data, error } = await supabase.from("packages").select("*");
 
     if (error) {
       console.error("Error fetching post:", error);
@@ -55,7 +53,6 @@ export default function TablesPage() {
       setLimit(true);
     }
     setLoading(true);
-
 
     fetchPost();
   }, []);
@@ -79,6 +76,7 @@ export default function TablesPage() {
     const subtext = formData.get("Subtext");
     const price = formData.get("Price");
     const slug = formData.get("Slug");
+    const alt = formData.get("alt_tab");
 
     if (!file) {
       alert("Please select a file!");
@@ -104,7 +102,7 @@ export default function TablesPage() {
       // 4️⃣ Insert metadata into your table
       const { error: insertError } = await supabase
         .from("packages")
-        .insert([{ text, subtext, price, slug, img: fileUrl }]);
+        .insert([{ text, subtext, price, slug, img: fileUrl, alt_tab: alt }]);
 
       if (insertError) throw insertError;
       fetchPost();
@@ -117,11 +115,10 @@ export default function TablesPage() {
   }
 
   async function editBlog(e: any) {
-
     const formData = new FormData(e.target);
     const fileInput = e.target.querySelector('input[type="file"]');
     let fileUrl = selectData.img;
-    if (fileInput && fileInput.files && fileInput.files.length > 0){
+    if (fileInput && fileInput.files && fileInput.files.length > 0) {
       const file = fileInput?.files?.[0];
       if (!file) {
         console.error("No file selected");
@@ -143,17 +140,16 @@ export default function TablesPage() {
       }
     }
 
-
     const text = formData.get("Text");
     const subtext = formData.get("Subtext");
     const price = formData.get("Price");
-    // const slug = formData.get("Slug");
+    const alt = formData.get("alt_tab");
+    const slug = formData.get("Slug");
     const { data, error } = await supabase
       .from("packages")
-      .update({ text, subtext, price, img: fileUrl })
+      .update({ text, subtext, slug, price, img: fileUrl, alt_tab: alt })
       .eq("id", Number(selectData.id));
     console.log("data", data);
-
 
     if (error) {
       console.error(error);
@@ -163,7 +159,6 @@ export default function TablesPage() {
 
     fetchPost();
   }
-
 
   async function deleteBlog(id: any) {
     const { data, error } = await supabase
@@ -176,25 +171,28 @@ export default function TablesPage() {
     fetchPost();
   }
 
-
   return (
     <>
       <button
-        className="my-6 px-8 py-2 flex w-fit justify-center rounded-lg bg-primary p-[13px] font-medium text-white hover:bg-opacity-90"
+        className="my-6 flex w-fit justify-center rounded-lg bg-primary p-[13px] px-8 py-2 font-medium text-white hover:bg-opacity-90"
         onClick={() => {
           // if (data.length ) {
           // }
-          setAdd(!addOpen)
+          setAdd(!addOpen);
         }}
       >
         {addOpen ? "Cancel" : "Add Packages"}
       </button>
 
       {addOpen && (
-        <div className="flex flex-col gap-9 mb-6">
+        <div className="mb-6 flex flex-col gap-9">
           <ShowcaseSection title="Packages" className="!p-6.5">
-            <form action="#" onSubmit={(event) => { editOpen ? editBlog(event) : handleFileUpload(event) }}>
-
+            <form
+              action="#"
+              onSubmit={(event) => {
+                editOpen ? editBlog(event) : handleFileUpload(event);
+              }}
+            >
               <InputGroup
                 label="Text"
                 type="text"
@@ -202,6 +200,9 @@ export default function TablesPage() {
                 placeholder="Enter Title"
                 className="mb-4.5"
                 required
+                handleChange={(e) =>
+                  setSelectData({ ...selectData, text: e.target.value })
+                }
               />
 
               <InputGroup
@@ -211,6 +212,9 @@ export default function TablesPage() {
                 placeholder="Enter Description"
                 className="mb-4.5"
                 required
+                handleChange={(e) =>
+                  setSelectData({ ...selectData, subtext: e.target.value })
+                }
               />
 
               <InputGroup
@@ -220,21 +224,46 @@ export default function TablesPage() {
                 placeholder="Enter Date"
                 className="mb-4.5"
                 required
+                handleChange={(e) =>
+                  setSelectData({ ...selectData, price: e.target.value })
+                }
               />
 
-              {/* <InputGroup
+              <InputGroup
+                label="Image Alt Text"
+                name="alt_tab"
+                type="text"
+                placeholder="Enter Alt"
+                value={selectData.alt_tab}
+                className="mb-4.5"
+                required
+                handleChange={(e) =>
+                  setSelectData({ ...selectData, alt_tab: e.target.value })
+                }
+              />
+
+              <InputGroup
                 label="Slug"
                 type="text"
                 placeholder="Enter Slug"
                 value={selectData.slug}
                 className="mb-4.5"
                 required
-              /> */}
-              {selectData?.img &&
+                handleChange={(e) =>
+                  setSelectData({ ...selectData, slug: e.target.value })
+                }
+              />
+
+              {selectData?.img && (
                 <div>
-                  <Image src={selectData.img} alt="Package Image" width={100} height={200} />
+                  <Image
+                    src={selectData.img}
+                    alt="Package Image"
+                    width={100}
+                    height={200}
+                  />
                 </div>
-              }
+              )}
               <InputGroup
                 label="Image"
                 type="file"
@@ -243,7 +272,8 @@ export default function TablesPage() {
                 required={!editOpen}
               />
 
-              <button className="mt-6 flex w-full justify-center rounded-lg bg-primary p-[13px] font-medium text-white hover:bg-opacity-90"
+              <button
+                className="mt-6 flex w-full justify-center rounded-lg bg-primary p-[13px] font-medium text-white hover:bg-opacity-90"
                 type="submit"
               >
                 {editOpen ? "Update" : "Submit"}
@@ -258,22 +288,21 @@ export default function TablesPage() {
           <TopChannelsSkeleton />
         ) : (
           <Suspense fallback={<TopChannelsSkeleton />}>
-            <div
-              className="grid rounded-[10px] bg-white px-7.5 pb-4 pt-7.5 shadow-1 dark:bg-gray-dark dark:shadow-card"
-            >
+            <div className="grid rounded-[10px] bg-white px-7.5 pb-4 pt-7.5 shadow-1 dark:bg-gray-dark dark:shadow-card">
               <h2 className="mb-4 text-body-2xlg font-bold text-dark dark:text-white">
                 Top Channels
               </h2>
 
-              <Table className="overflow-x-auto ">
+              <Table className="overflow-x-auto">
                 <TableHeader>
                   <TableRow className="border-none uppercase [&>th]:text-center">
                     <TableHead className="!text-left">Action</TableHead>
                     <TableHead className="!text-left">Title</TableHead>
                     <TableHead className="!text-left">Description</TableHead>
                     <TableHead className="!text-left">Date</TableHead>
+                    <TableHead className="!text-left">Alt</TableHead>
                     <TableHead className="!text-left">Image</TableHead>
-                    {/* <TableHead className="!text-left">Slug</TableHead> */}
+                    <TableHead className="!text-left">Slug</TableHead>
                   </TableRow>
                 </TableHeader>
 
@@ -283,13 +312,18 @@ export default function TablesPage() {
                       className="text-center text-base font-medium text-dark dark:text-white"
                       key={channel.text + i}
                     >
-                      <TableCell className="w-fit truncate flex gap-4">
-                        <button onClick={() => deleteBlog(channel.id)}><Trash2 /></button>
-                        <button onClick={() => {
-                          setEdit(true);
-                          setAdd(true);
-                          setSelectData(channel);
-                        }}><Pencil />
+                      <TableCell className="flex w-fit gap-4 truncate">
+                        <button onClick={() => deleteBlog(channel.id)}>
+                          <Trash2 />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEdit(true);
+                            setAdd(true);
+                            setSelectData(channel);
+                          }}
+                        >
+                          <Pencil />
                         </button>
                       </TableCell>
 
@@ -297,15 +331,21 @@ export default function TablesPage() {
                         {channel.text}
                       </TableCell>
 
-                      <TableCell className="max-w-[50px] truncate">{channel.subtext}</TableCell>
-
-                      <TableCell >
-                        {channel.price}
+                      <TableCell className="max-w-[50px] truncate">
+                        {channel.subtext}
                       </TableCell>
 
-                      <TableCell className="max-w-[50px] truncate">{channel.img}</TableCell>
+                      <TableCell>{channel.price}</TableCell>
+                      <TableCell className="max-w-[50px] truncate">
+                        {channel.alt_tab}
+                      </TableCell>
+                      <TableCell className="max-w-[50px] truncate">
+                        {channel.img}
+                      </TableCell>
 
-                      {/* <TableCell className="max-w-[50px] truncate">{channel.slug}</TableCell> */}
+                      <TableCell className="max-w-[50px] truncate">
+                        {channel.slug}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

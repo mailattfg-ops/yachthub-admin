@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { type HTMLInputTypeAttribute, useId, useState } from "react";
+import { type HTMLInputTypeAttribute, useId, useState, useEffect } from "react";
 
 type InputGroupProps = {
   className?: string;
@@ -35,7 +35,15 @@ const InputGroup: React.FC<InputGroupProps> = ({
   ...props
 }) => {
   const id = useId();
+
+  // ⭐ Internal state for input
   const [formData, setFormData] = useState(value || "");
+
+  // ⭐ FIX #1 – sync input value with parent (selectData)
+  useEffect(() => {
+    setFormData(value || "");
+  }, [value]);
+
   return (
     <div className={className}>
       <label
@@ -57,13 +65,20 @@ const InputGroup: React.FC<InputGroupProps> = ({
         <input
           id={id}
           type={type}
-          name={props.name ||label}
+          name={props.name || label}
           placeholder={placeholder}
-          onChange={(e) => {
-            setFormData(e.target.value);
-          }}
           value={formData}
           defaultValue={props.defaultValue}
+          required={required}
+          disabled={disabled}
+          data-active={active}
+          
+          // ⭐ FIX #2 – call handleChange + update internal value
+          onChange={(e) => {
+            setFormData(e.target.value);
+            if (handleChange) handleChange(e);
+          }}
+
           className={cn(
             "w-full rounded-lg border-[1.5px] border-stroke bg-transparent outline-none transition focus:border-primary disabled:cursor-default disabled:bg-gray-2 data-[active=true]:border-primary dark:border-dark-3 dark:bg-dark-2 dark:focus:border-primary dark:disabled:bg-dark dark:data-[active=true]:border-primary",
             type === "file"
@@ -72,9 +87,6 @@ const InputGroup: React.FC<InputGroupProps> = ({
             props.iconPosition === "left" && "pl-12.5",
             props.height === "sm" && "py-2.5",
           )}
-          required={required}
-          disabled={disabled}
-          data-active={active}
         />
 
         {icon}

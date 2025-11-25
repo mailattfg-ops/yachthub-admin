@@ -1,4 +1,5 @@
 import Signin from "@/components/Auth/Signin";
+
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -10,6 +11,7 @@ export const metadata: Metadata = {
 export default function SignIn() {
   return (
     <>
+ 
 
       <div className="rounded-[10px] bg-white shadow-1 dark:bg-gray-dark dark:shadow-card">
         <div className="flex flex-wrap items-center">
