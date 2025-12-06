@@ -1,4 +1,4 @@
-import Signin from "@/components/Auth/Signin";
+import Signin from "@/components/Auth/SigninWithPassword";
 
 import type { Metadata } from "next";
 import Image from "next/image";

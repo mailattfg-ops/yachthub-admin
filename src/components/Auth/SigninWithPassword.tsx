@@ -1,18 +1,38 @@
 "use client";
-import { EmailIcon, PasswordIcon } from "@/assets/icons";
-import Link from "next/link";
-import React, { useState } from "react";
+import { EmailIcon } from "@/assets/icons";
+import React, { useState, useEffect } from "react";
 import InputGroup from "../FormElements/InputGroup";
 import { Checkbox } from "../FormElements/checkbox";
+import { loginHardcoded } from "@/utils/auth";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+import { Eye,  EyeOff } from 'lucide-react';
 
 export default function SigninWithPassword() {
+  const router = useRouter();
+
   const [data, setData] = useState({
-    email: process.env.NEXT_PUBLIC_DEMO_USER_MAIL || "",
-    password: process.env.NEXT_PUBLIC_DEMO_USER_PASS || "",
+    email: "",
+    password: "",
     remember: false,
   });
 
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Load stored credentials if "remember me" was used
+  useEffect(() => {
+    const saved = localStorage.getItem("rememberUser");
+
+    if (saved) {
+      const user = JSON.parse(saved);
+      setData({
+        email: user.email,
+        password: user.password,
+        remember: true,
+      });
+    }
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setData({
@@ -23,12 +43,26 @@ export default function SigninWithPassword() {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    // You can remove this code block
     setLoading(true);
+
+    const ok = loginHardcoded(data.email, data.password);
 
     setTimeout(() => {
       setLoading(false);
+
+      if (ok) {
+        // Save credentials if remember is checked
+        if (data.remember) {
+          localStorage.setItem("rememberUser", JSON.stringify(data));
+        } else {
+          localStorage.removeItem("rememberUser");
+        }
+
+        toast.success("Login successful!");
+        router.push("/");
+      } else {
+        toast.error("Invalid email or password");
+      }
     }, 1000);
   };
 
@@ -42,18 +76,28 @@ export default function SigninWithPassword() {
         name="email"
         handleChange={handleChange}
         value={data.email}
-        icon={<EmailIcon />}
+       icon={null}              
+  rightElement={<EmailIcon />} 
       />
 
       <InputGroup
-        type="password"
+        type={showPassword ? "text" : "password"}
         label="Password"
         className="mb-5 [&_input]:py-[15px]"
         placeholder="Enter your password"
         name="password"
         handleChange={handleChange}
         value={data.password}
-        icon={<PasswordIcon />}
+        icon={null}
+        rightElement={
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            
+          >
+           {showPassword ? <Eye /> : <EyeOff />}
+          </button>
+        }
       />
 
       <div className="mb-6 flex items-center justify-between gap-2 py-2 font-medium">
@@ -63,6 +107,7 @@ export default function SigninWithPassword() {
           withIcon="check"
           minimal
           radius="md"
+          checked={data.remember}
           onChange={(e) =>
             setData({
               ...data,
@@ -70,13 +115,6 @@ export default function SigninWithPassword() {
             })
           }
         />
-
-        <Link
-          href="/auth/forgot-password"
-          className="hover:text-primary dark:text-white dark:hover:text-primary"
-        >
-          Forgot Password?
-        </Link>
       </div>
 
       <div className="mb-4.5">
@@ -86,7 +124,7 @@ export default function SigninWithPassword() {
         >
           Sign In
           {loading && (
-            <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-white border-t-transparent dark:border-primary dark:border-t-transparent" />
+            <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-white border-t-transparent" />
           )}
         </button>
       </div>

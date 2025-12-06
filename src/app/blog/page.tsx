@@ -131,7 +131,6 @@ export default function TablesPage() {
 
         if (uploadError) throw uploadError;
 
-        // Get public URL
         const { data: publicUrlData } = supabase.storage
           .from("yacht-bucket")
           .getPublicUrl(`files/${file.name}`);
