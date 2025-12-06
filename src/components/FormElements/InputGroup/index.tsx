@@ -19,6 +19,9 @@ type InputGroupProps = {
   iconPosition?: "left" | "right";
   height?: "sm" | "default";
   defaultValue?: string;
+
+  /** ⭐ NEW */
+  rightElement?: React.ReactNode;
 };
 
 const InputGroup: React.FC<InputGroupProps> = ({
@@ -32,6 +35,7 @@ const InputGroup: React.FC<InputGroupProps> = ({
   value,
   handleChange,
   icon,
+  rightElement, // ⭐ ADDED
   ...props
 }) => {
   const id = useId();
@@ -39,7 +43,7 @@ const InputGroup: React.FC<InputGroupProps> = ({
   // ⭐ Internal state for input
   const [formData, setFormData] = useState(value || "");
 
-  // ⭐ FIX #1 – sync input value with parent (selectData)
+  // ⭐ Sync external value (when editing data)
   useEffect(() => {
     setFormData(value || "");
   }, [value]);
@@ -59,37 +63,48 @@ const InputGroup: React.FC<InputGroupProps> = ({
           "relative mt-3 [&_svg]:absolute [&_svg]:top-1/2 [&_svg]:-translate-y-1/2",
           props.iconPosition === "left"
             ? "[&_svg]:left-4.5"
-            : "[&_svg]:right-4.5",
+            : "[&_svg]:right-4.5"
         )}
       >
+        {/* Input */}
         <input
           id={id}
           type={type}
           name={props.name || label}
           placeholder={placeholder}
           value={formData}
-          defaultValue={props.defaultValue}
           required={required}
           disabled={disabled}
           data-active={active}
-          
-          // ⭐ FIX #2 – call handleChange + update internal value
+          defaultValue={props.defaultValue}
           onChange={(e) => {
             setFormData(e.target.value);
-            if (handleChange) handleChange(e);
+            handleChange?.(e);
           }}
-
           className={cn(
-            "w-full rounded-lg border-[1.5px] border-stroke bg-transparent outline-none transition focus:border-primary disabled:cursor-default disabled:bg-gray-2 data-[active=true]:border-primary dark:border-dark-3 dark:bg-dark-2 dark:focus:border-primary dark:disabled:bg-dark dark:data-[active=true]:border-primary",
+            "w-full rounded-lg border-[1.5px] border-stroke bg-transparent outline-none transition focus:border-primary disabled:cursor-default disabled:bg-gray-2 data-[active=true]:border-primary dark:border-dark-3 dark:bg-dark-2 dark:focus:border-primary dark:disabled:bg-dark",
             type === "file"
               ? getFileStyles(props.fileStyleVariant!)
               : "px-5.5 py-3 text-dark placeholder:text-dark-6 dark:text-white",
             props.iconPosition === "left" && "pl-12.5",
-            props.height === "sm" && "py-2.5",
+            rightElement && "pr-12",           // ⭐ ADDED PADDING FOR RIGHT ELEMENT
+            props.height === "sm" && "py-2.5"
           )}
         />
 
-        {icon}
+        {/* Left Icon */}
+        {icon && (
+          <span className="absolute left-6 top-1/2 -translate-y-1/2">
+            {icon}
+          </span>
+        )}
+
+        {/* ⭐ NEW — Right-side element */}
+        {rightElement && (
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer">
+            {rightElement}
+          </span>
+        )}
       </div>
     </div>
   );
