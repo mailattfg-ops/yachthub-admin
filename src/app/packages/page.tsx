@@ -55,7 +55,7 @@ export default function TablesPage() {
     setLoading(true);
 
     fetchPost();
-  }, []);
+  }, [limit]);
 
   async function handleFileUpload(e: any) {
     e.preventDefault(); // stop page reload
